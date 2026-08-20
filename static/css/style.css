@@ -184,6 +184,36 @@ form.search-bar .button{ display: none; }
   padding: 0 24px 14px;
 }
 
+.theme-toggle-btn{
+  margin: 0 24px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-family: 'Vazirmatn', sans-serif;
+  font-size: 0.84em;
+  cursor: pointer;
+  transition: all .2s;
+}
+.theme-toggle-btn:hover{ border-color: #fff; color: #fff; }
+
+/* =========================================================
+   Day / Night mirror theme
+   (inverts the whole page; photos are inverted back so they
+   still render with natural colors)
+========================================================= */
+html[data-theme="light"]{
+  filter: invert(1) hue-rotate(180deg);
+}
+html[data-theme="light"] .cover-wrapper img,
+html[data-theme="light"] .track-page-cover img{
+  filter: invert(1) hue-rotate(180deg);
+}
+
 /* =========================================================
    Toolbar: categories + sort
 ========================================================= */
@@ -434,8 +464,90 @@ audio{
 .upload-form button.button{ margin-top: 18px; width: 100%; text-align: center; }
 
 /* =========================================================
-   Login page
+   Custom player controls
 ========================================================= */
+.player-controls{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.play-pause-btn{
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: filter .2s;
+}
+.play-pause-btn:hover{ filter: brightness(0.88); }
+.seek-wrap{
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.time-cur, .time-dur{ font-size: 0.72em; color: var(--text-faint); flex-shrink: 0; min-width: 30px; }
+.seek-bar, .volume-bar{
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border-strong);
+  outline: none;
+  cursor: pointer;
+}
+.seek-bar::-webkit-slider-thumb, .volume-bar::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+}
+.seek-bar::-moz-range-thumb, .volume-bar::-moz-range-thumb{
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+}
+.seek-bar::-webkit-slider-runnable-track, .volume-bar::-webkit-slider-runnable-track{
+  height: 4px; border-radius: 999px; background: transparent;
+}
+.volume-wrap{ display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.volume-wrap .volume-bar{ width: 60px; }
+.mute-btn{
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.mute-btn:hover{ color: #fff; }
+
+/* =========================================================
+   Track page
+========================================================= */
+.track-page{
+  max-width: 480px;
+  margin: 20px auto 100px;
+  padding: 0 24px;
+  text-align: center;
+}
+.track-page-cover{ max-width: 320px; margin: 0 auto 20px; }
+.track-page-title{ font-size: 1.5em; margin: 10px 0 4px; }
+.track-page .lyrics-box{ text-align: center; }
+
+
 .auth-page{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .auth-card{
   width: 100%; max-width: 380px;
@@ -498,6 +610,23 @@ audio{
   flex-shrink: 0;
 }
 @keyframes dotPulse{ 0%,100%{ opacity:.3;} 50%{ opacity:1;} }
+
+.now-playing .np-eq{
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.now-playing .np-eq span{
+  width: 2.5px;
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transform: scaleY(0.18);
+  transform-origin: bottom;
+  transition: transform .08s linear;
+}
 .now-playing .np-name{
   font-size: 0.86em; color: var(--text); max-width: 45vw;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
