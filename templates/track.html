@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<script>(function(){try{var t=localStorage.getItem('sb_theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000000" />
+<title>{{ item.display_name }} | SOLO BEATS</title>
+
+<meta property="og:type" content="music.song" />
+<meta property="og:title" content="{{ item.display_name }} | SOLO BEATS" />
+<meta property="og:description" content="گوش کن به «{{ item.display_name }}» ({{ item.category }}) از SOLO BEATS" />
+<meta property="og:url" content="{{ request.url }}" />
+{% if item.cover %}
+<meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ item.cover }}" />
+{% endif %}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{ item.display_name }} | SOLO BEATS" />
+<meta name="twitter:description" content="گوش کن به «{{ item.display_name }}» از SOLO BEATS" />
+
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
+</head>
+<body data-track-name="{{ item.name }}" data-track-display="{{ item.display_name }}">
+
+<div class="topbar">
+  <a href="/" class="icon-btn" title="بازگشت" style="text-decoration:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="brand-wrap"><h1 class="logo-title">SOLO BEATS</h1></div>
+  <div></div>
+</div>
+
+<div class="track-page">
+  {% if item.cover %}
+  <div class="cover-wrapper track-page-cover">
+    <img src="{{ item.cover }}" alt="کاور {{ item.display_name }}">
+  </div>
+  {% endif %}
+
+  <h2 class="track-page-title">{{ item.display_name }}</h2>
+  <div class="track-meta" style="justify-content:center; gap:16px;">
+    <span class="track-category">{{ item.category }}</span>
+    <span class="track-plays">▶ <span class="plays-count" data-track="{{ item.name }}">{{ item.plays }}</span></span>
+  </div>
+
+  <div class="player" style="margin-top:20px;">
+    <audio preload="none" style="display:none;">
+      <source src="/static/Music/{{ item.name }}">
+    </audio>
+    <div class="player-controls">
+      <button type="button" class="play-pause-btn" aria-label="پخش">
+        <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="icon-pause" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+      </button>
+      <div class="seek-wrap">
+        <span class="time-cur">0:00</span>
+        <input type="range" class="seek-bar" min="0" max="100" value="0" step="0.1">
+        <span class="time-dur">0:00</span>
+      </div>
+      <div class="volume-wrap">
+        <button type="button" class="mute-btn" aria-label="صدا">
+          <svg class="icon-vol" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9v6h4l5 5V4L9 9H5z"/></svg>
+          <svg class="icon-mute" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M5 9v6h4l5 5V4L9 9H5z M19 9l-4 4m0-4l4 4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </button>
+        <input type="range" class="volume-bar" min="0" max="1" step="0.01" value="1">
+      </div>
+    </div>
+  </div>
+
+  <div class="card-actions" style="justify-content:center; margin-top:18px;">
+    <a class="button solid" href="/download/{{ item.name }}">دانلود</a>
+    <button type="button" class="button" onclick="sbShare('{{ item.display_name|e }}', window.location.href, this)">اشتراک‌گذاری</button>
+  </div>
+
+  {% if item.lyrics %}
+  <div class="lyrics-box" style="max-height:none; margin-top:26px; text-align:center;">{{ item.lyrics }}</div>
+  {% endif %}
+</div>
+
+<div class="now-playing" id="nowPlaying">
+  <span class="np-eq" id="npEq"><span></span><span></span><span></span><span></span><span></span></span>
+  <span class="np-name" id="npName">—</span>
+  <button type="button" id="npToggle" title="توقف/پخش">
+    <svg id="npIconPause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+    <svg id="npIconPlay" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M8 5v14l11-7z"/></svg>
+  </button>
+</div>
+
+<script src="{{ url_for('static', filename='js/player.js') }}"></script>
+</body>
+</html>
