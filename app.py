@@ -12,10 +12,15 @@ PLAYS_FILE = 'plays.txt'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['COVER_FOLDER'] = COVER_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  # حداکثر ۲۰ مگابایت برای هر آپلود
 
 for folder in [UPLOAD_FOLDER, COVER_FOLDER, LYRICS_FOLDER]:
     if not os.path.exists(folder):
         os.makedirs(folder)
+
+@app.errorhandler(413)
+def file_too_large(e):
+    return 'حجم فایل بیش از حد مجاز است (حداکثر ۲۰ مگابایت). لطفاً فایل کوچک‌تری آپلود کنید.', 413
 
 # خواندن تعداد پخش‌ها
 def load_plays():
@@ -96,16 +101,56 @@ def index():
             if query in searchable:
                 cover_path = f"{COVER_FOLDER}/{os.path.splitext(filename)[0]}.jpg"
                 cover_exists = os.path.exists(cover_path)
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                mtime = os.path.getmtime(file_path) if os.path.exists(file_path) else 0
                 music_list.append({
                     'name': filename,
+                    'display_name': os.path.splitext(filename)[0],
                     'category': category,
                     'cover': f"/{cover_path}" if cover_exists else None,
                     'lyrics': lyrics,
-                    'plays': plays.get(filename, 0)
+                    'plays': plays.get(filename, 0),
+                    'mtime': mtime
                 })
+
+    # جدیدترین آهنگ‌ها اول نمایش داده شوند
+    music_list.sort(key=lambda x: x['mtime'], reverse=True)
 
     all_categories = sorted(set(item['category'] for item in music_list))
     return render_template('index.html', music_list=music_list, admin=session.get('admin', False), search=query, all_categories=all_categories)
+
+@app.route('/admin/lyrics')
+def admin_lyrics():
+    if not session.get('admin'):
+        return 'دسترسی ندارید!'
+    music_files = sorted(f for f in os.listdir(UPLOAD_FOLDER) if f.endswith('.mp3') or f.endswith('.wav'))
+    items = []
+    for filename in music_files:
+        lyrics_path = os.path.join(LYRICS_FOLDER, os.path.splitext(filename)[0] + '.txt')
+        lyrics = ''
+        if os.path.exists(lyrics_path):
+            with open(lyrics_path, encoding='utf-8') as f:
+                lyrics = f.read()
+        items.append({'name': filename, 'display_name': os.path.splitext(filename)[0], 'lyrics': lyrics})
+    return render_template('admin_panel.html', mode='lyrics', items=items, admin=True)
+
+@app.route('/admin/categories')
+def admin_categories():
+    if not session.get('admin'):
+        return 'دسترسی ندارید!'
+    categories = load_categories()
+    music_files = sorted(f for f in os.listdir(UPLOAD_FOLDER) if f.endswith('.mp3') or f.endswith('.wav'))
+    items = [{'name': f, 'display_name': os.path.splitext(f)[0], 'category': categories.get(f, 'معمولی')} for f in music_files]
+    return render_template('admin_panel.html', mode='categories', items=items, admin=True)
+
+@app.route('/admin/rename')
+def admin_rename():
+    if not session.get('admin'):
+        return 'دسترسی ندارید!'
+    categories = load_categories()
+    music_files = sorted(f for f in os.listdir(UPLOAD_FOLDER) if f.endswith('.mp3') or f.endswith('.wav'))
+    items = [{'name': f, 'display_name': os.path.splitext(f)[0], 'category': categories.get(f, 'معمولی')} for f in music_files]
+    return render_template('admin_panel.html', mode='rename', items=items, admin=True)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
