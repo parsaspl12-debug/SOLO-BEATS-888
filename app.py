@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, session
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, session, jsonify
 import os
 
 app = Flask(__name__)
@@ -8,6 +8,7 @@ UPLOAD_FOLDER = 'static/Music'
 COVER_FOLDER = 'static/covers'
 LYRICS_FOLDER = 'lyrics'
 CATEGORIES_FILE = 'categories.txt'
+PLAYS_FILE = 'plays.txt'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['COVER_FOLDER'] = COVER_FOLDER
@@ -15,6 +16,27 @@ app.config['COVER_FOLDER'] = COVER_FOLDER
 for folder in [UPLOAD_FOLDER, COVER_FOLDER, LYRICS_FOLDER]:
     if not os.path.exists(folder):
         os.makedirs(folder)
+
+# خواندن تعداد پخش‌ها
+def load_plays():
+    if not os.path.exists(PLAYS_FILE):
+        return {}
+    plays = {}
+    with open(PLAYS_FILE, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and '|' in line:
+                name, count = line.rsplit('|', 1)
+                try:
+                    plays[name] = int(count)
+                except ValueError:
+                    pass
+    return plays
+
+def save_plays(plays):
+    with open(PLAYS_FILE, 'w', encoding='utf-8') as f:
+        for filename, count in plays.items():
+            f.write(f"{filename}|{count}\n")
 
 # خواندن دسته‌بندی‌ها
 def load_categories():
@@ -57,25 +79,29 @@ def index():
     query = request.args.get('search', '').lower()
     music_files = os.listdir(UPLOAD_FOLDER)
     categories = load_categories()
+    plays = load_plays()
     music_list = []
 
     for filename in music_files:
         if filename.endswith('.mp3') or filename.endswith('.wav'):
             name = filename.lower()
-            if query in name:
-                category = categories.get(filename, 'معمولی')
+            category = categories.get(filename, 'معمولی')
+            lyrics_path = f"{LYRICS_FOLDER}/{os.path.splitext(filename)[0]}.txt"
+            lyrics = ''
+            if os.path.exists(lyrics_path):
+                with open(lyrics_path, encoding='utf-8') as f:
+                    lyrics = f.read()
+            # جستجو در نام آهنگ، دسته‌بندی و متن آهنگ
+            searchable = f"{name} {category.lower()} {lyrics.lower()}"
+            if query in searchable:
                 cover_path = f"{COVER_FOLDER}/{os.path.splitext(filename)[0]}.jpg"
                 cover_exists = os.path.exists(cover_path)
-                lyrics_path = f"{LYRICS_FOLDER}/{os.path.splitext(filename)[0]}.txt"
-                lyrics = ''
-                if os.path.exists(lyrics_path):
-                    with open(lyrics_path, encoding='utf-8') as f:
-                        lyrics = f.read()
                 music_list.append({
                     'name': filename,
                     'category': category,
                     'cover': f"/{cover_path}" if cover_exists else None,
-                    'lyrics': lyrics
+                    'lyrics': lyrics,
+                    'plays': plays.get(filename, 0)
                 })
 
     all_categories = sorted(set(item['category'] for item in music_list))
@@ -137,6 +163,13 @@ def delete_file(filename):
         save_categories(categories)
 
     return redirect(url_for('index'))
+
+@app.route('/track_play/<filename>', methods=['POST'])
+def track_play(filename):
+    plays = load_plays()
+    plays[filename] = plays.get(filename, 0) + 1
+    save_plays(plays)
+    return jsonify({'plays': plays[filename]})
 
 @app.route('/download/<filename>')
 def download(filename):
