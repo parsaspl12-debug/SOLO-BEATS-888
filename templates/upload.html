@@ -1,17 +1,41 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>آپلود موزیک</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>آپلود موزیک | SOLO BEATS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
 </head>
-<body style="background:#111;color:white;text-align:center;font-family:tahoma">
-  <h2>آپلود موزیک جدید</h2>
-  <form method="post" enctype="multipart/form-data">
-    <input type="file" name="music" required><br><br>
-    <input type="file" name="cover"><br><br>
-    <button type="submit">آپلود</button>
-  </form>
-  <br>
-  <a href="{{ url_for('logout') }}">خروج از حساب</a>
+<body>
+  <div class="topbar">
+    <div></div>
+    <h1 class="logo-title">SOLO BEATS</h1>
+    <div></div>
+  </div>
+
+  <div class="upload-form" style="margin-top:40px;">
+    <h3>آپلود موزیک جدید</h3>
+    <form method="post" enctype="multipart/form-data">
+      <span class="field-label">فایل موزیک</span>
+      <input type="file" name="music" required>
+
+      <span class="field-label">کاور (اختیاری)</span>
+      <input type="file" name="cover" accept="image/*">
+
+      <span class="field-label">دسته‌بندی</span>
+      <input type="text" name="category" placeholder="مثلاً: رپ، ریمیکس، لایو...">
+
+      <span class="field-label">متن آهنگ (اختیاری)</span>
+      <textarea name="lyrics" placeholder="متن آهنگ..." rows="4"></textarea>
+
+      <button class="button gold" type="submit">آپلود</button>
+    </form>
+    <div style="text-align:center; margin-top:18px;">
+      <a class="back-link" style="color:var(--text-faint); text-decoration:none; font-size:0.85em;" href="{{ url_for('logout') }}">خروج از حساب</a>
+    </div>
+  </div>
 </body>
 </html>
