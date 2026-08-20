@@ -40,11 +40,11 @@ def save_categories(categories):
 def login():
     if request.method == 'POST':
         password = request.form['password']
-        if password == '1234':
+        if password == 'Parsa46431387':
             session['admin'] = True
             return redirect(url_for('index'))
         else:
-            return 'رمز اشتباه است!'
+            return render_template('login.html', error='رمز عبور اشتباه است.')
     return render_template('login.html')
 
 @app.route('/logout')
@@ -78,7 +78,8 @@ def index():
                     'lyrics': lyrics
                 })
 
-    return render_template('index.html', music_list=music_list, admin=session.get('admin', False), search=query)
+    all_categories = sorted(set(item['category'] for item in music_list))
+    return render_template('index.html', music_list=music_list, admin=session.get('admin', False), search=query, all_categories=all_categories)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
