@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000000" />
 <title>SOLO BEATS</title>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
@@ -15,13 +16,12 @@
   <div id="menuToggle" title="منو">
     <div></div><div></div><div></div>
   </div>
-  <h1 class="logo-title">SOLO BEATS</h1>
-  <form class="search-bar" method="GET">
+  <div class="brand-wrap"><h1 class="logo-title">SOLO BEATS</h1></div>
+  <form class="search-bar" method="GET" onsubmit="return false;">
     <div class="search-input-wrap">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" name="search" placeholder="جستجوی آهنگ..." value="{{ search }}">
+      <input type="text" id="liveSearch" name="search" placeholder="جستجوی آهنگ، دسته یا متن..." value="{{ search }}" autocomplete="off">
     </div>
-    <button class="button" type="submit">جستجو</button>
   </form>
 </div>
 
@@ -40,18 +40,29 @@
   {% endif %}
 </div>
 
-{% if all_categories and all_categories|length > 0 %}
-<div class="category-bar" id="categoryBar">
-  <button type="button" class="cat-pill active" data-cat="__all__">همه</button>
-  {% for cat in all_categories %}
-  <button type="button" class="cat-pill" data-cat="{{ cat }}">{{ cat }}</button>
-  {% endfor %}
+<div class="toolbar">
+  {% if all_categories and all_categories|length > 0 %}
+  <div class="category-bar" id="categoryBar">
+    <button type="button" class="cat-pill active" data-cat="__all__">همه</button>
+    {% for cat in all_categories %}
+    <button type="button" class="cat-pill" data-cat="{{ cat }}">{{ cat }}</button>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div></div>
+  {% endif %}
+  <div class="sort-controls" id="sortControls">
+    <button type="button" class="sort-btn active" data-sort="default">پیش‌فرض</button>
+    <button type="button" class="sort-btn" data-sort="az">A-Z</button>
+    <button type="button" class="sort-btn" data-sort="popular">پرطرفدارترین</button>
+    <button type="button" class="sort-btn" data-sort="shuffle">تصادفی</button>
+  </div>
 </div>
-{% endif %}
+<p class="stats-line" id="statsLine">{{ music_list|length }} آهنگ</p>
 
 <div class="music-grid" id="musicGrid">
 {% for item in music_list %}
-<div class="music-box" data-category="{{ item.category }}">
+<div class="music-box" data-category="{{ item.category }}" data-name="{{ item.name }}" data-plays="{{ item.plays }}" data-order="{{ loop.index }}">
   {% if admin %}
   <form method="POST" action="/delete/{{ item.name }}" style="display:inline;" onsubmit="return confirm('آیا مطمئنید می‌خواهید این آهنگ حذف شود؟');">
     <button type="submit" class="delete-btn">حذف</button>
@@ -61,19 +72,26 @@
   {% if item.cover %}
   <div class="cover-wrapper">
     <img src="{{ item.cover }}" alt="کاور {{ item.name }}" loading="lazy">
+    <div class="play-overlay" onclick="playCard(this)" title="پخش">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+    </div>
   </div>
   {% endif %}
 
   <h3>{{ item.name }}</h3>
-  <p class="track-category">{{ item.category }}</p>
+  <div class="track-meta">
+    <span class="track-category">{{ item.category }}</span>
+    <span class="track-plays">▶ <span class="plays-count">{{ item.plays }}</span></span>
+  </div>
 
-  <audio controls preload="none">
+  <audio controls preload="none" ontimeupdate="handlePlayTracking(this)">
     <source src="/static/Music/{{ item.name }}">
     مرورگر شما از پخش موزیک پشتیبانی نمی‌کند.
   </audio>
 
   <div class="card-actions">
-    <a class="button gold" href="/download/{{ item.name }}">دانلود</a>
+    <a class="button solid" href="/download/{{ item.name }}">دانلود</a>
+    <button type="button" class="button" onclick="copyLink('{{ item.name }}', this)">کپی لینک</button>
     {% if item.lyrics %}
     <button type="button" class="lyrics-toggle-btn" onclick="toggleLyrics('{{ loop.index }}')">📄 متن آهنگ</button>
     {% endif %}
@@ -114,7 +132,7 @@
     <span class="field-label">متن آهنگ (اختیاری)</span>
     <textarea name="lyrics" placeholder="متن آهنگ..." rows="4"></textarea>
 
-    <button class="button gold" type="submit">آپلود</button>
+    <button class="button solid" type="submit">آپلود</button>
   </form>
 </div>
 {% endif %}
@@ -122,6 +140,14 @@
 <a href="https://www.instagram.com/your_instagram_username" target="_blank" rel="noopener noreferrer" class="instagram-icon">
   <img src="{{ url_for('static', filename='images/instagram_dark_icon.png') }}" alt="Instagram">
 </a>
+
+<div class="now-playing" id="nowPlaying">
+  <span class="np-dot"></span>
+  <span class="np-name" id="npName">—</span>
+  <button type="button" id="npToggle" title="توقف/پخش">
+    <svg id="npIcon" width="14" height="14" viewBox="0 0 24 24" fill="black"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+  </button>
+</div>
 
 <script>
   function toggleLyrics(index) {
@@ -133,6 +159,68 @@
     var form = document.getElementById("edit-lyrics-form-" + index);
     form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
   }
+
+  function copyLink(name, btn) {
+    var url = window.location.origin + "/static/Music/" + encodeURIComponent(name);
+    navigator.clipboard.writeText(url).then(function () {
+      var original = btn.textContent;
+      btn.textContent = "کپی شد ✓";
+      setTimeout(function () { btn.textContent = original; }, 1500);
+    });
+  }
+
+  function playCard(overlayEl) {
+    var card = overlayEl.closest(".music-box");
+    var audio = card.querySelector("audio");
+    if (audio) { audio.play(); }
+  }
+
+  // --- Now playing bar + auto-pause other tracks + play counting ---
+  var nowPlaying = document.getElementById("nowPlaying");
+  var npName = document.getElementById("npName");
+  var npToggle = document.getElementById("npToggle");
+  var activeAudio = null;
+  var countedTracks = new Set();
+
+  document.addEventListener("play", function (e) {
+    if (e.target.tagName !== "AUDIO") return;
+    document.querySelectorAll("audio").forEach(function (a) {
+      if (a !== e.target) a.pause();
+    });
+    document.querySelectorAll(".music-box").forEach(function (c) { c.classList.remove("playing"); });
+    var card = e.target.closest(".music-box");
+    if (card) card.classList.add("playing");
+
+    activeAudio = e.target;
+    npName.textContent = card ? card.getAttribute("data-name") : "";
+    nowPlaying.classList.add("show");
+
+    var name = card ? card.getAttribute("data-name") : null;
+    if (name && !countedTracks.has(name)) {
+      countedTracks.add(name);
+      fetch("/track_play/" + encodeURIComponent(name), { method: "POST" })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var el = card.querySelector(".plays-count");
+          if (el && typeof data.plays !== "undefined") el.textContent = data.plays;
+        }).catch(function(){});
+    }
+  }, true);
+
+  document.addEventListener("pause", function (e) {
+    if (e.target.tagName !== "AUDIO") return;
+    if (e.target === activeAudio) {
+      var card = e.target.closest(".music-box");
+      if (card) card.classList.remove("playing");
+    }
+  }, true);
+
+  npToggle.addEventListener("click", function () {
+    if (!activeAudio) return;
+    if (activeAudio.paused) { activeAudio.play(); } else { activeAudio.pause(); }
+  });
+
+  function handlePlayTracking(audioEl) { /* reserved for future progress-based features */ }
 
   document.addEventListener("DOMContentLoaded", function () {
     var menuToggle = document.getElementById("menuToggle");
@@ -150,22 +238,61 @@
       }
     });
 
+    var grid = document.getElementById("musicGrid");
+    var allCards = Array.from(grid.querySelectorAll(".music-box"));
+    var statsLine = document.getElementById("statsLine");
+
+    function applyFilters() {
+      var activeCat = document.querySelector(".cat-pill.active");
+      var cat = activeCat ? activeCat.getAttribute("data-cat") : "__all__";
+      var q = (document.getElementById("liveSearch").value || "").trim().toLowerCase();
+      var visibleCount = 0;
+      allCards.forEach(function (card) {
+        var matchesCat = (cat === "__all__" || card.getAttribute("data-category") === cat);
+        var matchesSearch = !q || card.getAttribute("data-name").toLowerCase().indexOf(q) !== -1
+          || card.getAttribute("data-category").toLowerCase().indexOf(q) !== -1;
+        var show = matchesCat && matchesSearch;
+        card.style.display = show ? "" : "none";
+        if (show) visibleCount++;
+      });
+      if (statsLine) statsLine.textContent = visibleCount + " آهنگ";
+    }
+
     var catBar = document.getElementById("categoryBar");
     if (catBar) {
-      var pills = catBar.querySelectorAll(".cat-pill");
-      var cards = document.querySelectorAll("#musicGrid .music-box");
-      pills.forEach(function (pill) {
+      catBar.querySelectorAll(".cat-pill").forEach(function (pill) {
         pill.addEventListener("click", function () {
-          pills.forEach(function (p) { p.classList.remove("active"); });
+          catBar.querySelectorAll(".cat-pill").forEach(function (p) { p.classList.remove("active"); });
           pill.classList.add("active");
-          var cat = pill.getAttribute("data-cat");
-          cards.forEach(function (card) {
-            var show = (cat === "__all__" || card.getAttribute("data-category") === cat);
-            card.style.display = show ? "" : "none";
-          });
+          applyFilters();
         });
       });
     }
+
+    document.getElementById("liveSearch").addEventListener("input", applyFilters);
+
+    var sortControls = document.getElementById("sortControls");
+    sortControls.querySelectorAll(".sort-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        sortControls.querySelectorAll(".sort-btn").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        var mode = btn.getAttribute("data-sort");
+        var cards = Array.from(grid.querySelectorAll(".music-box"));
+        if (mode === "default") {
+          cards.sort(function (a, b) { return parseInt(a.getAttribute("data-order")) - parseInt(b.getAttribute("data-order")); });
+        } else if (mode === "az") {
+          cards.sort(function (a, b) { return a.getAttribute("data-name").localeCompare(b.getAttribute("data-name"), 'fa'); });
+        } else if (mode === "popular") {
+          cards.sort(function (a, b) { return parseInt(b.getAttribute("data-plays")) - parseInt(a.getAttribute("data-plays")); });
+        } else if (mode === "shuffle") {
+          for (var i = cards.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = cards[i]; cards[i] = cards[j]; cards[j] = tmp;
+          }
+        }
+        cards.forEach(function (c) { grid.appendChild(c); });
+      });
+    });
   });
 </script>
 
