@@ -119,6 +119,33 @@ def index():
     all_categories = sorted(set(item['category'] for item in music_list))
     return render_template('index.html', music_list=music_list, admin=session.get('admin', False), search=query, all_categories=all_categories)
 
+@app.route('/track/<filename>')
+def track_page(filename):
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    if not os.path.exists(file_path):
+        return 'آهنگ پیدا نشد.', 404
+
+    categories = load_categories()
+    plays = load_plays()
+    category = categories.get(filename, 'معمولی')
+    lyrics_path = os.path.join(LYRICS_FOLDER, os.path.splitext(filename)[0] + '.txt')
+    lyrics = ''
+    if os.path.exists(lyrics_path):
+        with open(lyrics_path, encoding='utf-8') as f:
+            lyrics = f.read()
+    cover_path = f"{COVER_FOLDER}/{os.path.splitext(filename)[0]}.jpg"
+    cover_exists = os.path.exists(cover_path)
+
+    item = {
+        'name': filename,
+        'display_name': os.path.splitext(filename)[0],
+        'category': category,
+        'cover': f"/{cover_path}" if cover_exists else None,
+        'lyrics': lyrics,
+        'plays': plays.get(filename, 0)
+    }
+    return render_template('track.html', item=item, admin=session.get('admin', False))
+
 @app.route('/admin/lyrics')
 def admin_lyrics():
     if not session.get('admin'):
