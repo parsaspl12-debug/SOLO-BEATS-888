@@ -26,43 +26,52 @@
 </div>
 
 <div id="sidebar">
+  <div class="sidebar-stars" id="sidebarStars"></div>
+  <div class="sidebar-content">
   <a href="/">صفحه اصلی</a>
-  <a href="/upload">آپلود آهنگ جدید</a>
-  <a href="/admin/lyrics">ویرایش متن آهنگ‌ها</a>
-  {% if admin %}
-  <a href="/admin/categories">دسته‌بندی‌ها</a>
-  <a href="/admin/rename">تغییر نام آهنگ‌ها</a>
-  {% endif %}
-  {% if admin %}
-  <a href="/logout">خروج از حساب ادمین</a>
-  {% else %}
-  <a href="/login">ورود ادمین</a>
-  {% endif %}
-</div>
 
-<div class="toolbar">
   {% if all_categories and all_categories|length > 0 %}
+  <div class="sidebar-section-label">دسته‌بندی</div>
   <div class="category-bar" id="categoryBar">
     <button type="button" class="cat-pill active" data-cat="__all__">همه</button>
     {% for cat in all_categories %}
     <button type="button" class="cat-pill" data-cat="{{ cat }}">{{ cat }}</button>
     {% endfor %}
   </div>
-  {% else %}
-  <div></div>
   {% endif %}
+
+  <div class="sidebar-section-label">مرتب‌سازی</div>
   <div class="sort-controls" id="sortControls">
-    <button type="button" class="sort-btn active" data-sort="default">پیش‌فرض</button>
+    <button type="button" class="sort-btn active" data-sort="default">جدیدترین</button>
     <button type="button" class="sort-btn" data-sort="az">A-Z</button>
     <button type="button" class="sort-btn" data-sort="popular">پرطرفدارترین</button>
     <button type="button" class="sort-btn" data-sort="shuffle">تصادفی</button>
   </div>
+
+  {% if admin %}
+  <div class="sidebar-section-label">مدیریت</div>
+  <a href="/upload">آپلود آهنگ جدید</a>
+  <a href="/admin/lyrics">ویرایش متن آهنگ‌ها</a>
+  <a href="/admin/categories">دسته‌بندی‌ها</a>
+  <a href="/admin/rename">تغییر نام آهنگ‌ها</a>
+  {% endif %}
+
+  <div class="sidebar-section-label">ما را دنبال کنید</div>
+  <a href="https://www.instagram.com/parsa____cheraghi?igsh=MW8xcm8waTdvY3M0MA==&igsi=MW8xcm8waTdvY3M0MA==" target="_blank" rel="noopener noreferrer">اینستاگرام</a>
+
+  {% if admin %}
+  <a href="/logout">خروج از حساب ادمین</a>
+  {% else %}
+  <a href="/login">ورود ادمین</a>
+  {% endif %}
+  </div>
 </div>
+
 <p class="stats-line" id="statsLine">{{ music_list|length }} آهنگ</p>
 
 <div class="music-grid" id="musicGrid">
 {% for item in music_list %}
-<div class="music-box" data-category="{{ item.category }}" data-name="{{ item.name }}" data-plays="{{ item.plays }}" data-order="{{ loop.index }}">
+<div class="music-box" data-category="{{ item.category }}" data-name="{{ item.name }}" data-display="{{ item.display_name }}" data-plays="{{ item.plays }}" data-order="{{ loop.index }}">
   {% if admin %}
   <form method="POST" action="/delete/{{ item.name }}" style="display:inline;" onsubmit="return confirm('آیا مطمئنید می‌خواهید این آهنگ حذف شود؟');">
     <button type="submit" class="delete-btn">حذف</button>
@@ -72,13 +81,10 @@
   {% if item.cover %}
   <div class="cover-wrapper">
     <img src="{{ item.cover }}" alt="کاور {{ item.name }}" loading="lazy">
-    <div class="play-overlay" onclick="playCard(this)" title="پخش">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-    </div>
   </div>
   {% endif %}
 
-  <h3>{{ item.name }}</h3>
+  <h3>{{ item.display_name }}</h3>
   <div class="track-meta">
     <span class="track-category">{{ item.category }}</span>
     <span class="track-plays">▶ <span class="plays-count">{{ item.plays }}</span></span>
@@ -93,10 +99,10 @@
     <a class="button solid" href="/download/{{ item.name }}">دانلود</a>
     <button type="button" class="button" onclick="copyLink('{{ item.name }}', this)">کپی لینک</button>
     {% if item.lyrics %}
-    <button type="button" class="lyrics-toggle-btn" onclick="toggleLyrics('{{ loop.index }}')">📄 متن آهنگ</button>
+    <button type="button" class="lyrics-toggle-btn" onclick="toggleLyrics('{{ loop.index }}')">متن آهنگ</button>
     {% endif %}
     {% if admin %}
-    <button type="button" class="lyrics-toggle-btn" onclick="toggleEditLyricsForm('{{ loop.index }}')">✏️ ویرایش متن</button>
+    <button type="button" class="lyrics-toggle-btn" onclick="toggleEditLyricsForm('{{ loop.index }}')">ویرایش متن</button>
     {% endif %}
   </div>
 
@@ -137,15 +143,12 @@
 </div>
 {% endif %}
 
-<a href="https://www.instagram.com/your_instagram_username" target="_blank" rel="noopener noreferrer" class="instagram-icon">
-  <img src="{{ url_for('static', filename='images/instagram_dark_icon.png') }}" alt="Instagram">
-</a>
-
 <div class="now-playing" id="nowPlaying">
   <span class="np-dot"></span>
   <span class="np-name" id="npName">—</span>
   <button type="button" id="npToggle" title="توقف/پخش">
-    <svg id="npIcon" width="14" height="14" viewBox="0 0 24 24" fill="black"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+    <svg id="npIconPause" width="14" height="14" viewBox="0 0 24 24" fill="black"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+    <svg id="npIconPlay" width="14" height="14" viewBox="0 0 24 24" fill="black" style="display:none;"><path d="M8 5v14l11-7z"/></svg>
   </button>
 </div>
 
@@ -169,18 +172,19 @@
     });
   }
 
-  function playCard(overlayEl) {
-    var card = overlayEl.closest(".music-box");
-    var audio = card.querySelector("audio");
-    if (audio) { audio.play(); }
-  }
-
   // --- Now playing bar + auto-pause other tracks + play counting ---
   var nowPlaying = document.getElementById("nowPlaying");
   var npName = document.getElementById("npName");
   var npToggle = document.getElementById("npToggle");
+  var npIconPause = document.getElementById("npIconPause");
+  var npIconPlay = document.getElementById("npIconPlay");
   var activeAudio = null;
   var countedTracks = new Set();
+
+  function setNpIcon(isPlaying) {
+    npIconPause.style.display = isPlaying ? "" : "none";
+    npIconPlay.style.display = isPlaying ? "none" : "";
+  }
 
   document.addEventListener("play", function (e) {
     if (e.target.tagName !== "AUDIO") return;
@@ -192,8 +196,9 @@
     if (card) card.classList.add("playing");
 
     activeAudio = e.target;
-    npName.textContent = card ? card.getAttribute("data-name") : "";
+    npName.textContent = card ? card.getAttribute("data-display") : "";
     nowPlaying.classList.add("show");
+    setNpIcon(true);
 
     var name = card ? card.getAttribute("data-name") : null;
     if (name && !countedTracks.has(name)) {
@@ -212,6 +217,7 @@
     if (e.target === activeAudio) {
       var card = e.target.closest(".music-box");
       if (card) card.classList.remove("playing");
+      setNpIcon(false);
     }
   }, true);
 
@@ -225,6 +231,22 @@
   document.addEventListener("DOMContentLoaded", function () {
     var menuToggle = document.getElementById("menuToggle");
     var sidebar = document.getElementById("sidebar");
+
+    // ستاره‌های متحرک داخل منو
+    var starsContainer = document.getElementById("sidebarStars");
+    if (starsContainer) {
+      var starCount = 26;
+      for (var s = 0; s < starCount; s++) {
+        var star = document.createElement("span");
+        star.className = "star";
+        star.style.left = Math.random() * 100 + "%";
+        star.style.top = Math.random() * 100 + "%";
+        star.style.width = star.style.height = (Math.random() * 1.8 + 1) + "px";
+        star.style.animationDuration = (4 + Math.random() * 6) + "s, " + (1.5 + Math.random() * 2.5) + "s";
+        star.style.animationDelay = (Math.random() * 5) + "s, " + (Math.random() * 3) + "s";
+        starsContainer.appendChild(star);
+      }
+    }
 
     menuToggle.onclick = function () {
       menuToggle.classList.toggle("active");
@@ -249,7 +271,7 @@
       var visibleCount = 0;
       allCards.forEach(function (card) {
         var matchesCat = (cat === "__all__" || card.getAttribute("data-category") === cat);
-        var matchesSearch = !q || card.getAttribute("data-name").toLowerCase().indexOf(q) !== -1
+        var matchesSearch = !q || card.getAttribute("data-display").toLowerCase().indexOf(q) !== -1
           || card.getAttribute("data-category").toLowerCase().indexOf(q) !== -1;
         var show = matchesCat && matchesSearch;
         card.style.display = show ? "" : "none";
@@ -281,7 +303,7 @@
         if (mode === "default") {
           cards.sort(function (a, b) { return parseInt(a.getAttribute("data-order")) - parseInt(b.getAttribute("data-order")); });
         } else if (mode === "az") {
-          cards.sort(function (a, b) { return a.getAttribute("data-name").localeCompare(b.getAttribute("data-name"), 'fa'); });
+          cards.sort(function (a, b) { return a.getAttribute("data-display").localeCompare(b.getAttribute("data-display"), 'fa'); });
         } else if (mode === "popular") {
           cards.sort(function (a, b) { return parseInt(b.getAttribute("data-plays")) - parseInt(a.getAttribute("data-plays")); });
         } else if (mode === "shuffle") {

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>
+  {% if mode == 'lyrics' %}ویرایش متن آهنگ‌ها{% elif mode == 'categories' %}دسته‌بندی‌ها{% else %}تغییر نام آهنگ‌ها{% endif %}
+  | SOLO BEATS
+</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
+</head>
+<body>
+
+<div class="topbar">
+  <div></div>
+  <div class="brand-wrap"><h1 class="logo-title">SOLO BEATS</h1></div>
+  <div></div>
+</div>
+
+<p class="stats-line" style="text-align:center; margin-top:18px;">
+  {% if mode == 'lyrics' %}ویرایش متن آهنگ‌ها
+  {% elif mode == 'categories' %}ویرایش دسته‌بندی آهنگ‌ها
+  {% else %}تغییر نام آهنگ‌ها{% endif %}
+</p>
+
+<div class="music-grid" style="margin-top:20px;">
+  {% for item in items %}
+  <div class="music-box">
+    <h3>{{ item.display_name }}</h3>
+
+    {% if mode == 'lyrics' %}
+    <form method="POST" action="/edit_lyrics/{{ item.name }}">
+      <span class="field-label">متن آهنگ</span>
+      <textarea name="lyrics" rows="5" style="width:100%; background: rgba(255,255,255,0.03); border:1px solid var(--border); border-radius: var(--radius-sm); padding:10px; color: var(--text); font-family:'Vazirmatn', sans-serif;">{{ item.lyrics }}</textarea>
+      <button class="button solid" type="submit" style="margin-top:12px; width:100%;">ذخیره</button>
+    </form>
+
+    {% elif mode == 'categories' %}
+    <form method="POST" action="/edit_info/{{ item.name }}">
+      <span class="field-label">دسته‌بندی</span>
+      <input type="text" name="new_category" value="{{ item.category }}" style="width:100%; background: rgba(255,255,255,0.03); border:1px solid var(--border); border-radius: var(--radius-sm); padding:10px 12px; color: var(--text); font-family:'Vazirmatn', sans-serif;">
+      <button class="button solid" type="submit" style="margin-top:12px; width:100%;">ذخیره</button>
+    </form>
+
+    {% else %}
+    <form method="POST" action="/edit_info/{{ item.name }}">
+      <span class="field-label">نام جدید (با پسوند، مثلاً song.mp3)</span>
+      <input type="text" name="new_name" value="{{ item.name }}" required style="width:100%; background: rgba(255,255,255,0.03); border:1px solid var(--border); border-radius: var(--radius-sm); padding:10px 12px; color: var(--text); font-family:'Vazirmatn', sans-serif;">
+      <input type="hidden" name="new_category" value="{{ item.category }}">
+      <button class="button solid" type="submit" style="margin-top:12px; width:100%;">ذخیره</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="empty-state">هنوز آهنگی آپلود نشده.</div>
+  {% endfor %}
+</div>
+
+<p style="text-align:center; margin: 10px 0 60px;">
+  <a class="back-link" style="color:var(--text-faint); text-decoration:none; font-size:0.85em;" href="/">بازگشت به صفحه اصلی</a>
+</p>
+
+</body>
+</html>
