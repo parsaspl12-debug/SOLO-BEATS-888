@@ -25,54 +25,28 @@
     npIconPlay.style.display = isPlaying ? "none" : "";
   }
 
-  /* ---------------- Equalizer (Web Audio API) ---------------- */
-  var audioCtx = null;
-  var graphMap = new WeakMap();
-  var rafId = null;
+  /* ---------------- Equalizer (lightweight visual animation) ----------------
+     Note: this no longer routes audio through the Web Audio API
+     (createMediaElementSource/AnalyserNode). That routing was forcing the
+     browser to re-process every uploaded track's audio in JS, which caused
+     crackling/noise during playback on some devices. The bars now animate
+     with a simple timer instead of reading live audio data, so playback
+     stays on the browser's native (clean) audio path. */
+  var eqIntervalId = null;
 
-  function ensureGraph(audioEl) {
-    if (!audioCtx) {
-      var Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return null;
-      audioCtx = new Ctx();
-    }
-    if (!graphMap.has(audioEl)) {
-      try {
-        var src = audioCtx.createMediaElementSource(audioEl);
-        var analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 32;
-        src.connect(analyser);
-        analyser.connect(audioCtx.destination);
-        graphMap.set(audioEl, analyser);
-      } catch (err) {
-        return null;
-      }
-    }
-    return graphMap.get(audioEl);
-  }
-
-  function startEq(audioEl) {
+  function startEq() {
     if (!npEqBars || !npEqBars.length) return;
-    var analyser = ensureGraph(audioEl);
-    if (!analyser) return;
-    if (audioCtx.state === "suspended") { audioCtx.resume(); }
-    var data = new Uint8Array(analyser.frequencyBinCount);
-    if (rafId) cancelAnimationFrame(rafId);
-    function draw() {
-      analyser.getByteFrequencyData(data);
-      var step = Math.max(1, Math.floor(data.length / npEqBars.length));
-      npEqBars.forEach(function (bar, i) {
-        var v = data[i * step] || 0;
-        var scale = 0.18 + (v / 255) * 1.0;
+    if (eqIntervalId) clearInterval(eqIntervalId);
+    eqIntervalId = setInterval(function () {
+      npEqBars.forEach(function (bar) {
+        var scale = 0.18 + Math.random() * 1.0;
         bar.style.transform = "scaleY(" + scale.toFixed(2) + ")";
       });
-      rafId = requestAnimationFrame(draw);
-    }
-    draw();
+    }, 120);
   }
 
   function stopEq() {
-    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (eqIntervalId) { clearInterval(eqIntervalId); eqIntervalId = null; }
     npEqBars.forEach(function (bar) { bar.style.transform = "scaleY(0.18)"; });
   }
 
