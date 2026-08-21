@@ -61,19 +61,31 @@ a{ color: inherit; }
 }
 
 .brand-wrap{ display: flex; justify-content: center; }
+.brand-pulse{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  animation: monoPulse 3.2s ease-in-out infinite;
+}
+.brand-logo-img{
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.25));
+}
 .logo-title{
-  font-size: 30px;
+  font-size: 22px;
   font-family: 'Audiowide', cursive;
   color: #fff;
   letter-spacing: 2px;
   white-space: nowrap;
   margin: 0;
-  animation: monoPulse 3.2s ease-in-out infinite;
 }
 @keyframes monoPulse{
-  0%   { opacity: .55; text-shadow: 0 0 6px rgba(255,255,255,0.15); }
-  50%  { opacity: 1;   text-shadow: 0 0 22px rgba(255,255,255,0.75), 0 0 46px rgba(255,255,255,0.3); }
-  100% { opacity: .55; text-shadow: 0 0 6px rgba(255,255,255,0.15); }
+  0%   { opacity: .55; filter: drop-shadow(0 0 4px rgba(255,255,255,0.12)); }
+  50%  { opacity: 1;   filter: drop-shadow(0 0 18px rgba(255,255,255,0.6)); }
+  100% { opacity: .55; filter: drop-shadow(0 0 4px rgba(255,255,255,0.12)); }
 }
 
 /* search */
@@ -464,17 +476,21 @@ audio{
 .upload-form button.button{ margin-top: 18px; width: 100%; text-align: center; }
 
 /* =========================================================
-   Custom player controls
+   Custom player — single unified pill
 ========================================================= */
-.player-controls{
+.player-bar{
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 6px;
+  margin-top: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px 6px 6px;
 }
 .play-pause-btn{
   flex-shrink: 0;
-  width: 38px; height: 38px;
+  width: 34px; height: 34px;
   border-radius: 50%;
   background: #fff;
   color: #000;
@@ -483,18 +499,84 @@ audio{
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: filter .2s;
+  transition: filter .2s, transform .15s;
 }
 .play-pause-btn:hover{ filter: brightness(0.88); }
-.seek-wrap{
+.play-pause-btn:active{ transform: scale(0.92); }
+
+.progress-track{
+  position: relative;
   flex: 1;
+  height: 4px;
+  min-width: 0;
+  border-radius: 999px;
+  background: var(--border-strong);
+}
+.progress-fill{
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: #fff;
+  border-radius: 999px;
+  pointer-events: none;
+}
+.seek-bar{
+  position: absolute;
+  inset: -9px 0;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.player-time{
+  font-size: 0.72em;
+  color: var(--text-faint);
+  flex-shrink: 0;
+  min-width: 30px;
+  text-align: center;
+}
+
+.volume-pop-wrap{ position: relative; flex-shrink: 0; }
+.mute-btn{
+  width: 26px; height: 26px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 0;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color .2s, background .2s;
 }
-.time-cur, .time-dur{ font-size: 0.72em; color: var(--text-faint); flex-shrink: 0; min-width: 30px; }
-.seek-bar, .volume-bar{
+.mute-btn:hover{ color: #fff; background: rgba(255,255,255,0.06); }
+.volume-pop{
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px) scale(0.9);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  width: 110px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .18s, transform .18s;
+  z-index: 20;
+}
+.volume-pop.show{
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+.volume-bar{
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
@@ -504,7 +586,7 @@ audio{
   outline: none;
   cursor: pointer;
 }
-.seek-bar::-webkit-slider-thumb, .volume-bar::-webkit-slider-thumb{
+.volume-bar::-webkit-slider-thumb{
   -webkit-appearance: none;
   width: 12px; height: 12px;
   border-radius: 50%;
@@ -512,27 +594,13 @@ audio{
   cursor: pointer;
   border: none;
 }
-.seek-bar::-moz-range-thumb, .volume-bar::-moz-range-thumb{
+.volume-bar::-moz-range-thumb{
   width: 12px; height: 12px;
   border-radius: 50%;
   background: #fff;
   cursor: pointer;
   border: none;
 }
-.seek-bar::-webkit-slider-runnable-track, .volume-bar::-webkit-slider-runnable-track{
-  height: 4px; border-radius: 999px; background: transparent;
-}
-.volume-wrap{ display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.volume-wrap .volume-bar{ width: 60px; }
-.mute-btn{
-  background: transparent;
-  border: none;
-  color: var(--text-dim);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-.mute-btn:hover{ color: #fff; }
 
 /* =========================================================
    Track page
